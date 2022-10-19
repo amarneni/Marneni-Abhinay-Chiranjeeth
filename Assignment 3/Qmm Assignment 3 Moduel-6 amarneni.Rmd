@@ -1,0 +1,121 @@
+---
+title: "QMM ASSIGMENT 3"
+author: "Abhinay Chiranjeeth Marneni"
+date: "2022-10-19"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+*Loading packages*
+```{r}
+library("lpSolve")
+library("tinytex")
+```
+**1.Formulate and solve the Transportation Problem with R**
+\vspace{2mm}
+*Make a table by using information provided.*
+```{r}
+cost <- matrix(c(22,14,30,600,100,
+                 16,20,24,625,120,
+                 80,60,70,"-","-"), ncol=5,byrow=T)
+colnames(cost) <- c("Warehouse1", "Warehouse2", "Warehouse3", "ProductionCost","ProductionCapacity")
+rownames(cost) <- c("PlantA", "PlantB", "Demand")
+cost <- as.table(cost)
+cost
+```  
+\vspace{3mm}
+**Primal Model**
+\vspace{2mm}
+**The Objective Function of Minimize the Transportation cost**
+
+$$ Z = 622C_{11} + 614C_{12} + 630C_{13} + 0C_{14} + 641C_{21} + 645C_{22} + 649C_{23} + 0C_{24}$$\\
+
+**The Constraints for Primal model**
+**Subject to**
+\vspace{2mm}
+
+$${\text Supply \hspace{2mm} Constraints}$$
+$$C_{11} + C_{12} + C_{13} + C_{14} \le 100$$
+$$C_{21} + C_{22} + C_{23} + C_{24}\le 120$$
+$${\text Demand \hspace{2mm} Constraints}$$
+$$C_{11} + C_{21}\ge 80$$
+$$C_{12} + C_{22}\ge 60$$
+$$C_{13} + C_{23}\ge 70$$
+$$C_{14} + C_{24}\ge 10$$
+\vspace{2mm}
+$${\text  Non - Negativity \hspace{2mm} Constraints} $$
+$$C_{ij} \ge 0 \hspace{4mm} \text {Where i = 1,2 and j = 1,2,3,4} $$
+# demand Constraints is not equal to supply variables 
+# To solve Primal with R
+
+
+```{r}
+# Matrix for the given objective function
+trans.cost <- matrix(c(622,614,630,0,
+                 641,645,649,0), ncol=4, byrow=T) # Matrix for the given objective function
+trans.cost
+colnames(trans.cost) <- c("Warehouse1", "Warehouse2", "Warehouse3", "Dummy")
+rownames(trans.cost) <- c("PlantA", "PlantB")
+trans.cost
+  
+#Identify the row signs, row right hand side values, column sign and column right hand side values
+row.signs <- rep("<=",2)
+row.rhs <- c(100,120)
+col.signs <- rep(">=",4)
+col.rhs <- c(80,60,70,10)
+lptrans.cost <- lp.transport(trans.cost,"min", row.signs,row.rhs,col.signs,col.rhs) #the linear problem transport function 
+```
+
+```{r}
+# the objective value for linear problem transport function
+  lptrans.cost$objval # the solution of primal 
+```
+\vspace{2mm}
+$${\text Where \hspace{2mm} WH_1 = Warehouse \hspace{2mm} 1}$$
+$$\hspace{2mm} WH_2 = Warehouse \hspace{2mm} 2$$
+$$\hspace{2mm} WH_3 = Warehouse \hspace{2mm} 3$$
+$${\text Where \hspace{2mm} PL_1 = PlantA \hspace{2mm}}$$
+$$\hspace{2mm} PL_2 = plantB \hspace{2mm}$$
+
+```{r}
+#To Get the constraints value
+lptrans.cost$solution
+```
+##The shipping cost from each plant to the warehouse of each wholesaler along with the monthly demand from each wholesaler are also indicated in the table
+
+**2. Formulate the dual model of the above transportation problem**
+\vspace{1mm}\newline
+
+##the primal model to minimize the transportation cost the dual model of  maximize the value added(Z)
+
+$$ {\text Maximize \hspace{3mm} Z = } \hspace{3mm} 80WH_1 + 60WH_2 + 70WH_3 - 100PL_1 - 120PL_2$$
+\vspace{1mm}\newline
+**Subject to the payment constraints**
+
+
+$$ {\text Total \hspace{2mm} Payments \hspace{2mm} Constraints} $$
+$$ WH_1 - PL_1 \ge 622 $$ 
+$$ WH_2 - PL_1\ge 614$$
+$$ WH_3 - PL_1 \ge 630$$
+$$ WH_1 - PL_2 \ge 641$$
+$$ WH_2 - PL_2 \ge 645$$
+$$ WH_3 - PL_2 \ge 649$$
+$$ WH_i > 0 , PL_j > 0$$
+\newline
+**3.Economic Interpretation**
+**for above  Constraints we can written as**
+$$WH_1 \le 622 + PL_1$$  
+$$WH_2 \le 614 + PL_1 $$
+$$WH_3 \le 630 + PL_1 $$
+$$WH_1\le 641 + PL_2$$
+$$WH_2 \le 645 + PL_2$$
+$$WH_3 \le 649 + PL_2$$
+$$ \text{Here Warehouse 1 recieved payment , which consider as marginal revenue}$$
+$$ \text{To Maximization the Profit MR has to equal to MC , MR = MC}$$
+$$ \text{We must lower plant expenses in order to get to the Marginal Revenue (MR)}$$
+$$ \text{MR < MC}$$
+$$ \text{We must expend more supply production in order to get to the Marginal Revenue (MR)}$$
+$$ \text{MR > MC}$$
