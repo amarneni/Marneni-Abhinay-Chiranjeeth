@@ -1,0 +1,135 @@
+---
+title: "Qmm Assignment_4"
+author: "Abhinay Chiranjeeth Marneni"
+date: "2022-10-30"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Loading Packages
+```{r}
+library("lpSolve")
+library("Benchmarking")
+```
+
+## Formulation of Data Envelopment Analysis model
+```{r}
+data<-matrix(c("Facility 1","Facility 2","Facility 3","Facility 4","Facility 5", "Facility 6",
+                150,400,320,520,350,320,
+                0.2,0.7,1.2,2.0,1.2,0.7,
+                14000,14000,42000,28000,19000,14000,
+                3500,21000,10500,42000,25000,15000), ncol=5, byrow=F)
+colnames(data) <- c("DMU", "Staff_Hours_Per_Day","Supplies_Per_Day","Reimbursed_Patient_Days","Privately_Paid_Patient_Days")
+data <- as.table(data)
+data 
+```
+
+## Formulation of all DEA assumptions of FDH, CRS, VRS, IRS, DRS,and FRH for above file.
+#Set the Peers and Lambdas command under each of the above assumptions 
+# Free Disposability Hull (FDH)
+```{r}
+x <- matrix(c(150,400,320,520,350,320,
+            0.2,0.7,1.2,2.0,1.2,0.7),ncol=2)
+y <- matrix(c(14000,14000,42000,28000,19000,14000,
+                3500,21000,10500,42000,25000,15000),ncol=2)
+colnames(y) <- c("Reimbursed_Patient_Days","Privately_Paid_Patient_Days")
+colnames(x) <- c("Staff_Hours_Per_Day","Supplies_Per_Day")
+print(x)
+print(y)
+FDH <- dea(x, y, RTS = "fdh")
+FDH
+peers(FDH)
+lambda(FDH)
+```
+#  Constant Returns to Scale (CRS)
+```{r}
+CRS<-dea(x, y, RTS = "crs")
+CRS
+peers(CRS)
+lambda(CRS)
+```
+
+# Variable Returns to Scale (VRS)
+```{r}
+VRS <- dea(x, y, RTS = "vrs")
+VRS
+peers(VRS)
+lambda(VRS)
+```
+
+#Increasing Returns to Scale (IRS)
+```{r}
+IRS <- dea(x, y, RTS = "irs")
+IRS
+peers(IRS)
+lambda(IRS)
+```
+
+# Decreasing Returns to Scale (DRS)
+```{r}
+DRS <- dea(x, y, RTS = "drs")
+DRS
+peers(DRS)
+lambda(DRS)
+```
+
+# Free Replicability Hull (FRH)
+```{r}
+FRH <- dea(x, y, RTS = "fdh+") #Additivity (scaling up and down, but only with integers) and local constant return to scale of free disposability
+FRH
+peers(FRH)
+lambda(FRH)
+``` 
+
+## Summary of Results for above tables in tabular format
+```{r}
+as.table(data)
+data1 <-table (CRS = c(1.0000, 1.0000, 1.0000, 1.0000, 0.9775, 0.8675),
+FDH= c(1,1,1,1,1,1), VRS= c(1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 0.8963),IRS =c( 1.0000, 1.0000, 1.0000, 1.0000, 1.0000 ,0.8963), DRS= c(1.0000 ,1.0000 ,1.0000, 1.0000, 0.9775, 0.8675), FRH= c(1,1,1,1,1,1))
+data1
+```
+
+## Compare and contrast the above results 
+```{r}
+Results <- cbind(data,data1)
+Results[,-c(1:4)] 
+```
+
+## Interpret DEA results
+# For FDH the results indicate that every DMU is efficient. This is primarily because the scale is able to assess even the lowest degree of efficiency because there is no geometrical constraint.
+#For CRS the findings show that DMUs 1, 2, 3, and 4 are effective. Only 97.75% of DMU(5) and 86.7% of DMU(6) are effectively used. On the basis of our initial analysis, we discovered this. In addition, DMU(4peer )'s units are 1, 2, and 4, with weights of 0.2, 0.08, and 0.54. The peer units for DMU(6) are 1, 2, and 4, with respective weights of 0.34, 0.4, and 0.13.
+#For VRS the results showed that DMUs 1, 2, 3, 4, and 5 are productive. Only 89.63% of the DMU(6) is effective. On the basis of our initial analysis, we discovered this. Additionally, the peer units for DMU(6) are 1, 2, and 5, with corresponding relative weights of 0.4, 0.34, and 0.26.
+#For IRS the results showed that DMUs 1, 2, 3, 4, and 5 are effective. Only 89.63% of DMU(6) is effective. Based on our initial study, we discovered this. Additionally, the peer units for DMU(6) are 1, 2, and 5, with respective relative weights of 0.4, 0.34, and 0.26.
+#For DRS the results showed that DMUs 1, 2, 3, and 4 are effective. Only 97.75% of DMU(5) and 86.7% of DMU(6) are efficient. On the basis of our initial analysis, we discovered this. In addition, DMU(4peer)'s units are 1, 2, and 4, with respective weights of 0.2, 0.08, and 0.54. The peer units for DMU(6) are 1, 2, and 4, with respective weights of 0.34, 0.4, and 0.13.
+#For FRH all DMUs are efficient, according to the FRH data. This is mainly because there isn't a convexity assumption used, and most of the time, this technique enables the scale to capture even the tiniest amount of efficiency that is not subject to replication or disposal.
+
+
+## plotting for all DEA acceptance of FDH, CRS, VRS, IRS, DRS,and FRH
+
+# Plot for Free Disposability Hull(FDH)
+```{r}
+dea.plot(x,y,RTS="fdh")
+```
+# Plot for Constant Returns to Scale(CRS)
+```{r}
+dea.plot(x, y, RTS='crs')
+```
+# Plot for Variable Returns to Scale(VRS)
+```{r}
+dea.plot(x,y,RTS="vrs") 
+```
+# Plot for Increasing Returns to Scale(IRS)
+```{r}
+dea.plot(x,y,RTS="irs")
+```
+# Plot for Decreasing Returns to Scale(DRS)
+```{r}
+dea.plot(x,y,RTS="drs")
+```
+# Plot for Free Replicability Hull(FRH)
+```{r}
+dea.plot(x,y,RTS="fdh+")
+```
