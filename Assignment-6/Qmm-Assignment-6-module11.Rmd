@@ -1,0 +1,88 @@
+---
+title: "QMM Assignment-6"
+author: "Abhinay Chiranjeeth Marneni"
+date: "2022-11-19"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Loading the packages
+```{r}
+library(lpSolve)
+library(lpSolveAPI)
+```
+
+### Formulating Lp model problem
+#S1 = shift 1 with Sunday 
+#S2 = shift 2 with Monday 
+#S3 = shift 3 with Tuesday 
+#S4 = shift 4 with Wednesday 
+#S5=  shift 5 with Thursday 
+#S6 = shift 6 with Friday 
+#S7 = shift 7 with Saturday 
+
+# Objective function 
+#Min: 775x1 + 800x2 + 800x3 + 800x4 + 800x5 + 775x6 + 750x7;
+# Constraints 
+#0x1 + 1x2 + 1x3 + 1x4 + 1x5 + 1x6 + 0x7 >= 18;
+#0x2 + 0x2 + 1x3 + 1x4 + 1x5 + 1x6 + 1x7 >= 27;
+#1x3 + 0x2 + 0x3 + 1x4 + 1x5 + 1x6 + 1x7 >= 22;
+#1x4 + 1x2 + 0x3 + 0x4 + 1x5 + 1x6 + 1x7 >= 26;
+#1x5 + 1x2 + 1x3 + 0x4 + 0x5 + 1x6 + 1x7 >= 25;
+#1x6 + 1x2 + 1x3 + 1x4 + 0x5 + 0x6 + 1x7 >= 21;
+#1x7 + 1x2 + 1x3 + 1x4 + 1x5 + 0x6 + 0x7 >= 19;
+#S1 > 0;
+#S2 > 0;
+#S3 > 0;
+#S4 > 0;
+#S5 > 0;  
+#S6 > 0;
+#S7 > 0;
+#int S1, S2, S3, S4, S5, S6, S7;
+
+# Create table
+```{r}
+table <- make.lp(7, 7)
+set.objfn(table, c(775, 800, 800, 800, 800, 775, 750))      # Objective function 
+lp.control(table,sense='min')
+set.row(table, 1, c(0, 1, 1, 1, 1, 1, 0), indices = c(1, 2, 3, 4, 5, 6, 7)) # Set LHS and RHS
+set.row(table, 2, c(0, 0, 1, 1, 1, 1, 1), indices = c(1, 2, 3, 4, 5, 6, 7))
+set.row(table, 3, c(1, 0, 0, 1, 1, 1, 1), indices = c(1, 2, 3, 4, 5, 6, 7))
+set.row(table, 4, c(1, 1, 0, 0, 1, 1, 1), indices = c(1, 2, 3, 4, 5, 6, 7))
+set.row(table, 5, c(1, 1, 1, 0, 0, 1, 1), indices = c(1, 2, 3, 4, 5, 6, 7))
+set.row(table, 6, c(1, 1, 1, 1, 0, 0, 1), indices = c(1, 2, 3, 4, 5, 6, 7))
+set.row(table, 7, c(1, 1, 1, 1, 1, 0, 0), indices = c(1, 2, 3, 4, 5, 6, 7))
+rhs <- c(18, 27, 22, 26, 25, 21, 19)
+set.rhs(table, rhs)
+set.constr.type(table, c(">=", ">=", ">=", ">=", ">=", ">=", ">=")) ## constraint and variables
+set.bounds(table, lower = rep(0, 7))
+set.type(table, 1:7,"integer")
+lp.rownames <- c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
+lp.colnames <- c("S1", "S2", "S3","S4", "S5", "S6","S7")
+dimnames(table) <- list(lp.rownames, lp.colnames)
+table
+```
+
+#Solving AP-Hub lp model to find optimal variables of workers in factory.
+
+```{r}
+solve(table)
+# Getting objective, variables
+get.objective(table)
+get.variables(table)
+```
+##The table shows the available workers, and the total cost is 25675.
+
+#A week's worth of factory worker shifts are considered in order to figure out the best method for reduce total wage costs.
+```{r}
+shift<- matrix(c(0,4,5,0,8,1,0,0,0,5,0,8,1,13,2,0,0,0,8,1,13,2,4,0,0,8,1,13,2,4,5,0,0,1,13,2,3,4,0,0,0,13,2,4,5,0,8,0,0), ncol=7,byrow=TRUE)
+row.names(shift) <- c('Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday')
+colnames(shift)<- c('Sun-Mon','Mon-Tues','Tues-Wed','Wed-Thur','Thur-Fri','Fri-Sat','Sat-Sun')
+shift
+rowSums(shift) #To reduce the total cost of labor expenses, the number of workers should be distributed according to each                      day's scheduled shift.
+```
